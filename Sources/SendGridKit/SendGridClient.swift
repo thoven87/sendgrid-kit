@@ -126,7 +126,11 @@ public struct SendGridClient: Sendable {
     ///   - id: The ID of the Event Webhook you want to retrieve.
     ///   - includeAccountStatusChange: Use this to include optional fields in the response payload.
     ///   - onbehalfOf: The on-behalf-of header allows you to make API calls from a parent account on behalf of the parent's Subusers or customer accounts.
-    public func getEventWebhook(id: String, includeAccountStatusChange: Bool, onbehalfOf: String? = nil) async throws -> WebhookSettingsResponse {
+    public func getEventWebhook(
+        id: String,
+        includeAccountStatusChange: Bool,
+        onbehalfOf: String? = nil
+    ) async throws -> WebhookSettingsResponse {
         var headers = HTTPHeaders()
         headers.add(name: "Authorization", value: "Bearer \(self.apiKey)")
         headers.add(name: "Content-Type", value: "application/json")
@@ -196,7 +200,11 @@ public struct SendGridClient: Sendable {
     ///   - id: The ID of the Event Webhook you want to retrieve.
     ///   - enabled: Enable or disable the webhook by setting this property to true or false, respectively.
     ///   - onbehalfOf: The on-behalf-of header allows you to make API calls from a parent account on behalf of the parent's Subusers or customer accounts.
-    public func toggleEventWebhookSignatureVerification(id: String, enabled: Bool, onbehalfOf: String? = nil) async throws -> EventWebhookSignaturePublicKeyResponse {
+    public func toggleEventWebhookSignatureVerification(
+        id: String,
+        enabled: Bool,
+        onbehalfOf: String? = nil
+    ) async throws -> EventWebhookSignaturePublicKeyResponse {
         var headers = HTTPHeaders()
         headers.add(name: "Authorization", value: "Bearer \(self.apiKey)")
         headers.add(name: "Content-Type", value: "application/json")
@@ -211,15 +219,17 @@ public struct SendGridClient: Sendable {
         var request = HTTPClientRequest(url: url)
         request.headers = headers
         request.method = .PATCH
-        request.body = try HTTPClientRequest.Body.bytes(self.encoder.encode(
-            ToogleEventWebhookSignatureVerification(enabled: enabled)
-        ))
+        request.body = try HTTPClientRequest.Body.bytes(
+            self.encoder.encode(
+                ToogleEventWebhookSignatureVerification(enabled: enabled)
+            ))
 
         let response = try await self.httpClient.execute(request, timeout: .seconds(30))
 
         // If the request was accepted, simply return
         if (200...299).contains(response.status.code) {
-            return try await self.decoder.decode(EventWebhookSignaturePublicKeyResponse.self, from: response.body.collect(upTo: 1024 * 1024))
+            return try await self.decoder.decode(
+                EventWebhookSignaturePublicKeyResponse.self, from: response.body.collect(upTo: 1024 * 1024))
         }
 
         // `JSONDecoder` will handle empty body by throwing decoding error
@@ -230,7 +240,10 @@ public struct SendGridClient: Sendable {
     /// - Parameters:
     ///   - id: The ID of the Event Webhook you want to retrieve.
     ///   - onbehalfOf: The on-behalf-of header allows you to make API calls from a parent account on behalf of the parent's Subusers or customer accounts.
-    public func getSignedEventWebhookPublicKey(id: String, onbehalfOf: String? = nil) async throws -> EventWebhookSignaturePublicKeyResponse {
+    public func getSignedEventWebhookPublicKey(
+        id: String,
+        onbehalfOf: String? = nil
+    ) async throws -> EventWebhookSignaturePublicKeyResponse {
         var headers = HTTPHeaders()
         headers.add(name: "Authorization", value: "Bearer \(self.apiKey)")
         headers.add(name: "Content-Type", value: "application/json")
@@ -249,7 +262,8 @@ public struct SendGridClient: Sendable {
 
         // If the request was accepted, simply return
         if (200...299).contains(response.status.code) {
-            return try await self.decoder.decode(EventWebhookSignaturePublicKeyResponse.self, from: response.body.collect(upTo: 1024 * 1024))
+            return try await self.decoder.decode(
+                EventWebhookSignaturePublicKeyResponse.self, from: response.body.collect(upTo: 1024 * 1024))
         }
 
         // `JSONDecoder` will handle empty body by throwing decoding error
@@ -276,7 +290,7 @@ public struct SendGridClient: Sendable {
         if let onbehalfOf = onbehalfOf {
             headers.add(name: "on-behalf-of", value: onbehalfOf)
         }
-        
+
         var url = "\(self.apiURL)/user/webhooks/event/settings/\(id)"
 
         if includeAccountStatusChange {
@@ -315,7 +329,7 @@ public struct SendGridClient: Sendable {
         if let onbehalfOf = onbehalfOf {
             headers.add(name: "on-behalf-of", value: onbehalfOf)
         }
-        
+
         let url = "\(self.apiURL)/user/webhooks/event/settings/\(id)"
 
         var request = HTTPClientRequest(url: url)
@@ -393,7 +407,7 @@ public struct SendGridClient: Sendable {
             URLQueryItem(name: "limit", value: String(limit)),
             URLQueryItem(name: "offset", value: String(offset)),
             URLQueryItem(name: "aggregated_by", value: aggregatedBy.rawValue),
-            URLQueryItem(name: "start_date", value: dailyDateFormatter.string(from: startDate))
+            URLQueryItem(name: "start_date", value: dailyDateFormatter.string(from: startDate)),
         ]
 
         if let endDate = endDate {
