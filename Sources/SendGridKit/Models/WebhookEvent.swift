@@ -5,6 +5,7 @@ public enum SendGridWebhookEvent: Codable, Sendable {
     case delivery(SendGridDeliveryEvent)
     case engagement(SendGridEngagementEvent)
     case accountStatusChange(SendGridAccountStatusChangeEvent)
+    case received(SendGridReceivedEvent)
 
     /// Common event types used for initial parsing
     public enum EventType: String, Codable, Sendable {
@@ -21,6 +22,7 @@ public enum SendGridWebhookEvent: Codable, Sendable {
         case unsubscribe
         case blocked
         case accountStatusChange = "account_status_change"
+        case received
     }
 
     /// Shared structures used across different event types
@@ -65,6 +67,8 @@ public enum SendGridWebhookEvent: Codable, Sendable {
             self = .engagement(try container.decode(SendGridEngagementEvent.self))
         case .accountStatusChange:
             self = .accountStatusChange(try container.decode(SendGridAccountStatusChangeEvent.self))
+        case .received:
+            self = .received(try container.decode(SendGridReceivedEvent.self))
         }
     }
 
@@ -76,6 +80,8 @@ public enum SendGridWebhookEvent: Codable, Sendable {
         case .engagement(let event):
             try container.encode(event)
         case .accountStatusChange(let event):
+            try container.encode(event)
+        case .received(let event):
             try container.encode(event)
         }
     }
@@ -214,8 +220,10 @@ public struct SendGridEngagementEvent: Codable, Sendable {
     public let urlOffset: UrlOffset?
     /// User agent of the recipient.
     public let useragent: String?
+    /// Content type of the email (html or text).
+    public let sgContentType: String?
     /// Custom arguments passed with the message.
-    /// SendGrid documentation states that unique_args should only contain string values.
+    /// Note: SendGrid can send categories as either a string or array. This field normalizes both to an array.
     public let uniqueArgs: [String: String]?
 
     public enum EngagementEventType: String, Codable, CaseIterable, Sendable {
@@ -249,6 +257,7 @@ public struct SendGridEngagementEvent: Codable, Sendable {
         case url
         case urlOffset = "url_offset"
         case useragent
+        case sgContentType = "sg_content_type"
         case uniqueArgs = "unique_args"
     }
 }
@@ -276,6 +285,81 @@ public struct SendGridAccountStatusChangeEvent: Codable, Sendable {
         case sgEventId = "sg_event_id"
         case timestamp
         case type
+    }
+}
+
+/// Received events from inbound email processing
+public struct SendGridReceivedEvent: Codable, Sendable {
+    /// Type of event (always "received").
+    public let event: String
+    /// Received message ID.
+    public let recvMsgid: String
+    /// Unique ID attached to this event.
+    public let sgEventId: String
+    /// Unix timestamp when the event occurred.
+    public let timestamp: Date
+    /// API key ID used.
+    public let apiKeyId: String?
+    /// API version used.
+    public let apiVersion: String?
+    /// Client IP address.
+    public let clientIp: String?
+    /// Protocol used (SMTP, HTTP, etc.).
+    public let `protocol`: String?
+    /// Number of recipients.
+    public let recipientCount: Int?
+    /// Reseller ID.
+    public let resellerId: String?
+    /// Size of the message in bytes.
+    public let size: Int?
+    /// User agent string.
+    public let useragent: String?
+    /// V3 payload details containing message breakdown information.
+    public let v3PayloadDetails: V3PayloadDetails?
+
+    /// Detailed breakdown of V3 payload information.
+    public struct V3PayloadDetails: Codable, Sendable {
+        public let textPlain: Int?
+        public let textHtml: Int?
+        public let contentBytes: Int?
+        public let recipientCount: Int?
+        public let substitutionBytes: Int?
+        public let substitutionCount: Int?
+        public let senderCount: Int?
+        public let customargCount: Int?
+        public let attachmentsBytes: Int?
+        public let customargLargestBytes: Int?
+        public let personalizationCount: Int?
+
+        enum CodingKeys: String, CodingKey {
+            case textPlain = "text/plain"
+            case textHtml = "text/html"
+            case contentBytes = "content_bytes"
+            case recipientCount = "recipient_count"
+            case substitutionBytes = "substitution_bytes"
+            case substitutionCount = "substitution_count"
+            case senderCount = "sender_count"
+            case customargCount = "customarg_count"
+            case attachmentsBytes = "attachments_bytes"
+            case customargLargestBytes = "customarg_largest_bytes"
+            case personalizationCount = "personalization_count"
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case event
+        case recvMsgid = "recv_msgid"
+        case sgEventId = "sg_event_id"
+        case timestamp
+        case apiKeyId = "api_key_id"
+        case apiVersion = "api_version"
+        case clientIp = "client_ip"
+        case `protocol`
+        case recipientCount = "recipient_count"
+        case resellerId = "reseller_id"
+        case size
+        case useragent
+        case v3PayloadDetails = "v3_payload_details"
     }
 }
 
@@ -442,6 +526,7 @@ extension SendGridEngagementEvent {
         url = try container.decodeIfPresent(String.self, forKey: .url)
         urlOffset = try container.decodeIfPresent(UrlOffset.self, forKey: .urlOffset)
         useragent = try container.decodeIfPresent(String.self, forKey: .useragent)
+        sgContentType = try container.decodeIfPresent(String.self, forKey: .sgContentType)
         uniqueArgs = try container.decodeIfPresent([String: String].self, forKey: .uniqueArgs)
 
         // Handle timestamp as Unix timestamp
@@ -467,7 +552,51 @@ extension SendGridEngagementEvent {
         try container.encodeIfPresent(url, forKey: .url)
         try container.encodeIfPresent(urlOffset, forKey: .urlOffset)
         try container.encodeIfPresent(useragent, forKey: .useragent)
+        try container.encodeIfPresent(sgContentType, forKey: .sgContentType)
         try container.encodeIfPresent(uniqueArgs, forKey: .uniqueArgs)
+
+        // Encode timestamp as Unix timestamp
+        try container.encode(timestamp.timeIntervalSince1970, forKey: .timestamp)
+    }
+}
+
+extension SendGridReceivedEvent {
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        event = try container.decode(String.self, forKey: .event)
+        recvMsgid = try container.decode(String.self, forKey: .recvMsgid)
+        sgEventId = try container.decode(String.self, forKey: .sgEventId)
+        apiKeyId = try container.decodeIfPresent(String.self, forKey: .apiKeyId)
+        apiVersion = try container.decodeIfPresent(String.self, forKey: .apiVersion)
+        clientIp = try container.decodeIfPresent(String.self, forKey: .clientIp)
+        `protocol` = try container.decodeIfPresent(String.self, forKey: .protocol)
+        recipientCount = try container.decodeIfPresent(Int.self, forKey: .recipientCount)
+        resellerId = try container.decodeIfPresent(String.self, forKey: .resellerId)
+        size = try container.decodeIfPresent(Int.self, forKey: .size)
+        useragent = try container.decodeIfPresent(String.self, forKey: .useragent)
+        v3PayloadDetails = try container.decodeIfPresent(V3PayloadDetails.self, forKey: .v3PayloadDetails)
+
+        // Handle timestamp as Unix timestamp
+        let timestampValue = try container.decode(Double.self, forKey: .timestamp)
+        timestamp = Date(timeIntervalSince1970: timestampValue)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(event, forKey: .event)
+        try container.encode(recvMsgid, forKey: .recvMsgid)
+        try container.encode(sgEventId, forKey: .sgEventId)
+        try container.encodeIfPresent(apiKeyId, forKey: .apiKeyId)
+        try container.encodeIfPresent(apiVersion, forKey: .apiVersion)
+        try container.encodeIfPresent(clientIp, forKey: .clientIp)
+        try container.encodeIfPresent(`protocol`, forKey: .protocol)
+        try container.encodeIfPresent(recipientCount, forKey: .recipientCount)
+        try container.encodeIfPresent(resellerId, forKey: .resellerId)
+        try container.encodeIfPresent(size, forKey: .size)
+        try container.encodeIfPresent(useragent, forKey: .useragent)
+        try container.encodeIfPresent(v3PayloadDetails, forKey: .v3PayloadDetails)
 
         // Encode timestamp as Unix timestamp
         try container.encode(timestamp.timeIntervalSince1970, forKey: .timestamp)
@@ -496,5 +625,265 @@ extension SendGridAccountStatusChangeEvent {
 
         // Encode timestamp as Unix timestamp
         try container.encode(timestamp.timeIntervalSince1970, forKey: .timestamp)
+    }
+}
+
+public struct EventWebhookInput: Codable, Sendable {
+    /// Set this property to true to enable the Event Webhook or false to disable it.
+    public let enabled: Bool
+    /// Set this property to the URL where you want the Event Webhook to send event data.
+    public let url: String
+    /// Set this property to true to receive group resubscribe events.
+    /// Group resubscribes occur when recipients resubscribe to a specific unsubscribe group by updating their subscription preferences.
+    /// You must enable Subscription Tracking to receive this type of event.
+    public let groupResubscribe: Bool
+    /// Set this property to true to receive delivered events. Delivered events occur when a message has been successfully delivered to the receiving server.
+    public let delivered: Bool
+    /// Set this property to true to receive group unsubscribe events.
+    /// Group unsubscribes occur when recipients unsubscribe from a specific unsubscribe group either by direct link or by updating their subscription preferences.
+    /// You must enable Subscription Tracking to receive this type of event.
+    public let groupUnsubscribe: Bool
+    /// Set this property to true to receive spam report events. Spam reports occur when recipients mark a message as spam.
+    public let spamReport: Bool
+    /// Set this property to true to receive bounce events. A bounce occurs when a receiving server could not or would not accept a message.
+    public let bounce: Bool
+    /// Set this property to true to receive deferred events. Deferred events occur when a recipient's email server temporarily rejects a message.
+    public let deferred: Bool
+    /// Set this property to true to receive unsubscribe events.
+    /// Unsubscribes occur when recipients click on a message's subscription management link.
+    /// You must enable Subscription Tracking to receive this type of event.
+    public let unsubscribe: Bool
+    /// Set this property to true to receive processed events.
+    /// Processed events occur when a message has been received by Twilio SendGrid and the message is ready to be delivered.
+    public let processed: Bool
+    /// Set this property to true to receive open events. Open events occur when a recipient has opened the HTML message.
+    /// You must enable Open Tracking to receive this type of event.
+    public let open: Bool
+    /// Set this property to true to receive click events.
+    /// Click events occur when a recipient clicks on a link within the message.
+    /// You must enable Click Tracking to receive this type of event.
+    public let click: Bool
+    /// Set this property to true to receive dropped events. Dropped events occur when your message is not delivered by Twilio SendGrid.
+    /// Dropped events are accomponied by a reason property, which indicates why the message was dropped.
+    /// Reasons for a dropped message include: Invalid SMTPAPI header, Spam Content (if spam checker app enabled), Unsubscribed Address, Bounced Address, Spam Reporting Address, Invalid, Recipient List over Package Quota.
+    public let dropped: Bool
+    /// Optionally set this property to a friendly name for the Event Webhook.
+    /// A friendly name may be assigned to each of your webhooks to help you differentiate them.
+    /// The friendly name is for convenience only. You should use the webhook id property for any programmatic tasks.
+    public let friendlyName: String?
+    /// Set this property to the OAuth client ID that SendGrid will pass to your OAuth server or service provider to generate an OAuth access token.
+    /// When passing data in this property, you must also include the oauth_token_url property.
+    public let oauthClientId: String?
+    /// Set this property to the OAuth client secret that SendGrid will pass to your OAuth server or service provider to generate an OAuth access token.
+    /// This secret is needed only once to create an access token. SendGrid will store the secret, allowing you to update your client ID and Token URL without passing the secret to SendGrid again.
+    /// When passing data in this field, you must also include the oauth_client_id and oauth_token_url properties.
+    public let oauthClientSecret: String?
+    /// Set this property to the URL where SendGrid will send the OAuth client ID and client secret to generate an OAuth access token.
+    /// This should be your OAuth server or service provider. When passing data in this field, you must also include the oauth_client_id property.
+    public let oauthTokenUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case enabled
+        case url
+        case groupResubscribe = "group_resubscribe"
+        case delivered
+        case groupUnsubscribe = "group_unsubscribe"
+        case spamReport = "spam_report"
+        case bounce
+        case deferred
+        case unsubscribe
+        case processed
+        case open
+        case click
+        case dropped
+        case friendlyName = "friendly_name"
+        case oauthClientId = "oauth_client_id"
+        case oauthClientSecret = "oauth_client_secret"
+        case oauthTokenUrl = "oauth_token_url"
+    }
+}
+
+public struct WebhookSettingsResponse: Codable, Sendable {
+    /// A unique string used to identify the webhook. A webhook's ID is generated programmatically and cannot be changed after creation.
+    /// You can assign a natural language identifier to your webhook using the friendly_name property.
+    public let id: String
+    /// An ISO 8601 timestamp in UTC timezone when the Event Webhook was created.
+    /// If a Webhook's created_date is null, it is a legacy Event Webook , which means it is your oldest Webhook.
+    public let createdAt: Date?
+    /// Set this property to true to enable the Event Webhook or false to disable it.
+    public let enabled: Bool
+    /// Set this property to the URL where you want the Event Webhook to send event data.
+    public let url: String
+    /// Set this property to true to receive group resubscribe events.
+    /// Group resubscribes occur when recipients resubscribe to a specific unsubscribe group by updating their subscription preferences.
+    /// You must enable Subscription Tracking to receive this type of event.
+    public let groupResubscribe: Bool
+    /// Set this property to true to receive delivered events. Delivered events occur when a message has been successfully delivered to the receiving server.
+    public let delivered: Bool
+    /// Set this property to true to receive group unsubscribe events.
+    /// Group unsubscribes occur when recipients unsubscribe from a specific unsubscribe group either by direct link or by updating their subscription preferences.
+    /// You must enable Subscription Tracking to receive this type of event.
+    public let groupUnsubscribe: Bool
+    /// Set this property to true to receive spam report events. Spam reports occur when recipients mark a message as spam.
+    public let spamReport: Bool
+    /// Set this property to true to receive bounce events. A bounce occurs when a receiving server could not or would not accept a message.
+    public let bounce: Bool
+    /// Set this property to true to receive deferred events. Deferred events occur when a recipient's email server temporarily rejects a message.
+    public let deferred: Bool
+    /// Set this property to true to receive unsubscribe events.
+    /// Unsubscribes occur when recipients click on a message's subscription management link.
+    /// You must enable Subscription Tracking to receive this type of event.
+    public let unsubscribe: Bool
+    /// Set this property to true to receive processed events.
+    /// Processed events occur when a message has been received by Twilio SendGrid and the message is ready to be delivered.
+    public let processed: Bool
+    /// Set this property to true to receive open events. Open events occur when a recipient has opened the HTML message.
+    /// You must enable Open Tracking to receive this type of event.
+    public let open: Bool
+    /// Set this property to true to receive click events.
+    /// Click events occur when a recipient clicks on a link within the message.
+    /// You must enable Click Tracking to receive this type of event.
+    public let click: Bool
+    /// Set this property to true to receive dropped events. Dropped events occur when your message is not delivered by Twilio SendGrid.
+    /// Dropped events are accomponied by a reason property, which indicates why the message was dropped.
+    /// Reasons for a dropped message include: Invalid SMTPAPI header, Spam Content (if spam checker app enabled), Unsubscribed Address, Bounced Address, Spam Reporting Address, Invalid, Recipient List over Package Quota.
+    public let dropped: Bool
+    /// Optionally set this property to a friendly name for the Event Webhook.
+    /// A friendly name may be assigned to each of your webhooks to help you differentiate them.
+    /// The friendly name is for convenience only. You should use the webhook id property for any programmatic tasks.
+    public let friendlyName: String?
+    /// Set this property to the OAuth client ID that SendGrid will pass to your OAuth server or service provider to generate an OAuth access token.
+    /// When passing data in this property, you must also include the oauth_token_url property.
+    public let oauthClientId: String?
+    /// Set this property to the OAuth client secret that SendGrid will pass to your OAuth server or service provider to generate an OAuth access token.
+    /// This secret is needed only once to create an access token. SendGrid will store the secret, allowing you to update your client ID and Token URL without passing the secret to SendGrid again.
+    /// When passing data in this field, you must also include the oauth_client_id and oauth_token_url properties.
+    public let oauthClientSecret: String?
+    /// Set this property to the URL where SendGrid will send the OAuth client ID and client secret to generate an OAuth access token.
+    /// This should be your OAuth server or service provider. When passing data in this field, you must also include the oauth_client_id property.
+    public let oauthTokenUrl: String?
+    /// An ISO 8601 timestamp in UTC timezone when the Event Webhook was last modified.
+    public let updatedAt: Date
+    /// Indicates if the webhook is configured to send account status change events related to compliance action taken by SendGrid.
+    public let accountStatusChange: Bool?
+    /// The public key you can use to verify the SendGrid signature.
+    public let publicKey: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case createdAt = "created_date"
+        case enabled
+        case url
+        case groupResubscribe = "group_resubscribe"
+        case delivered
+        case groupUnsubscribe = "group_unsubscribe"
+        case spamReport = "spam_report"
+        case bounce
+        case deferred
+        case unsubscribe
+        case processed
+        case open
+        case click
+        case dropped
+        case friendlyName = "friendly_name"
+        case oauthClientId = "oauth_client_id"
+        case oauthClientSecret = "oauth_client_secret"
+        case oauthTokenUrl = "oauth_token_url"
+        case updatedAt = "updated_date"
+        case accountStatusChange = "account_status_change"
+        case publicKey = "public_key"
+    }
+}
+
+public struct SendGridTestWebhookInput: Codable, Sendable {
+    /// The ID of the Event Webhook you want to retrieve.
+    let id: String
+    /// The URL where you would like the test notification to be sent.
+    let url: String
+    /// The client ID Twilio SendGrid sends to your OAuth server or service provider to generate an OAuth access token.
+    /// When passing data in this property, you must also include the oauth_token_url property.
+    let oauthClientId: String?
+    /// The oauth_client_secret is needed only once to create an access token.
+    /// SendGrid will store this secret, allowing you to update your Client ID and Token URL without passing the secret to SendGrid again.
+    /// When passing data in this field, you must also include the oauth_client_id and oauth_token_url properties.
+    let oauthClientSecret: String?
+    /// The URL where Twilio SendGrid sends the Client ID and Client Secret to generate an access token.
+    /// This should be your OAuth server or service provider. When passing data in this field, you must also include the oauth_client_id property.
+    let oauthTokenUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case url
+        case oauthClientId = "oauth_client_id"
+        case oauthClientSecret = "oauth_client_secret"
+        case oauthTokenUrl = "oauth_token_url"
+    }
+}
+
+public struct AllEventWebhooks: Codable, Sendable {
+    /// The maximum number of Event Webhooks you can have enabled under your current Twilio SendGrid plan.
+    /// See the Twilio SendGrid pricing page for more information about the features available with each plan.
+    let maxAllowed: Int
+    /// An array of Event Webhook objects. Each object represents one of your webhooks and contains its configuration settings,
+    /// including which events it is set to send in the POST request, the URL where it will send those events, and the webhook's ID.
+    let webhooks: [WebhookSettingsResponse]
+
+    enum CodingKeys: String, CodingKey {
+        case maxAllowed = "max_allowed"
+        case webhooks
+    }
+}
+
+struct ToogleEventWebhookSignatureVerification: Codable, Sendable {
+    let enabled: Bool
+}
+
+public struct EventWebhookSignaturePublicKeyResponse: Codable, Sendable {
+    /// A unique string used to identify the webhook. A webhook's ID is generated programmatically and cannot be changed after creation.
+    /// You can assign a natural language identifier to your webhook using the friendly_name property.
+    public let id: String
+    /// The public key you can use to verify the Twilio SendGrid signature.
+    public let publicKey: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case publicKey = "public_key"
+    }
+}
+
+public struct ParseWebhookSettingsResponse: Codable, Sendable {
+    /// The public URL where you would like SendGrid to POST the data parsed from your email.
+    /// Any emails sent with the given hostname provided (whose MX records have been updated to point to SendGrid) will be parsed and POSTed to this URL.
+    let url: String
+    /// A specific and unique domain or subdomain that you have created to use exclusively to parse your incoming email. For example, parse.yourdomain.com.
+    let hostname: String
+    /// Indicates if you would like SendGrid to check the content parsed from your emails for spam before POSTing them to your domain.
+    let spamCheck: Bool
+    /// Indicates if you would like SendGrid to post the original MIME-type content of your parsed email.
+    /// When this parameter is set to true, SendGrid will send a JSON payload of the content of your email.
+    let sendRaw: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case url
+        case hostname
+        case spamCheck = "spam_check"
+        case sendRaw = "send_raw"
+    }
+}
+
+/// How you would like the statistics to by grouped.
+public enum SendGridInboundParseAggregateBy: String, Codable, Sendable {
+    case day, week, month
+}
+
+public struct ParseWebhookSettingsStatistics: Codable, Sendable {
+    /// The date that the stats were collected.
+    let date: Date
+    /// The Parse Webhook usage statistics.
+    let stats: [Metric]
+
+    struct Metric: Codable {
+        /// The number of emails received and parsed by the Parse Webhook.
+        let received: Int
     }
 }
