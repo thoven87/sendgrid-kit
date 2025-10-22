@@ -65,7 +65,7 @@ struct WebhookEventTests {
         #expect(event.event == .delivered)
         #expect(event.response == "250 OK")
         #expect(event.category == ["cat facts"])
-        #expect(event.sgEventId == "rWVYmVk90MjZJ9iohOBa3w==")
+        #expect(event.sgEventId == "test_delivered_event_id")
     }
 
     @Test("Decode Deferred Event")
