@@ -18,5 +18,11 @@ public struct SendGridError: Error, Decodable, Sendable {
 
         /// When applicable, this property value will be helper text or a link to documentation to help you troubleshoot the error.
         public var help: String?
+
+        /// The URL that is already configured as a Webhook endpoint for one of your existing Webhooks.
+        public var url: String?
+
+        /// The ID of a Webhook that exists on your account that is already configured to send events to the endpoint URL you provided.
+        public var id: String?
     }
 }
