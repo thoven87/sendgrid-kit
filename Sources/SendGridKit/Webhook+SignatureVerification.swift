@@ -115,6 +115,6 @@ extension String {
 extension Data {
     /// Helper to convert Data to hex string
     var hexString: String {
-        return self.map { String(format: "%02x", $0) }.joined()
+        self.map { "0\(String($0, radix: 16))".suffix(2) }.joined()
     }
 }
