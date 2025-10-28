@@ -32,14 +32,14 @@ public enum SendGridWebhookEvent: Codable, Sendable {
     }
 
     public struct Newsletter: Codable, Sendable {
-        public let newsletterUserListId: String
-        public let newsletterId: String
-        public let newsletterSendId: String
+        public let newsletterUserListID: String
+        public let newsletterID: String
+        public let newsletterSendID: String
 
         enum CodingKeys: String, CodingKey {
-            case newsletterUserListId = "newsletter_user_list_id"
-            case newsletterId = "newsletter_id"
-            case newsletterSendId = "newsletter_send_id"
+            case newsletterUserListID = "newsletter_user_list_id"
+            case newsletterID = "newsletter_id"
+            case newsletterSendID = "newsletter_send_id"
         }
     }
 
