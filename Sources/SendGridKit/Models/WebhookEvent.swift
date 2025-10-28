@@ -55,7 +55,7 @@ public enum SendGridWebhookEvent: Codable, Sendable {
             throw DecodingError.dataCorrupted(
                 DecodingError.Context(
                     codingPath: decoder.codingPath,
-                    debugDescription: "Could not determine event type"
+                    debugDescription: "Could not determine SendGrid webhook event type"
                 )
             )
         }
