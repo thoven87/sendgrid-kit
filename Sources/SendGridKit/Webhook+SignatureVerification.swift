@@ -82,9 +82,7 @@ extension SendGridWebhookEvent {
         }
 
         // Perform signature verification
-        let isValid = ecdsaPublicKey.isValidSignature(ecdsaSignature, for: SHA256.hash(data: signedData))
-
-        if !isValid {
+        guard ecdsaPublicKey.isValidSignature(ecdsaSignature, for: SHA256.hash(data: signedData)) else {
             throw SendGridWebhookSignatureError.noMatchingSignatureFound
         }
     }
