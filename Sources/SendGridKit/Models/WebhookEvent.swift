@@ -139,7 +139,7 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
     /// Type of bounce or status change.
     public let type: StatusType?
     /// Custom arguments passed with the message.
-    /// SendGrid documentation states that unique_args should only contain string values.
+    /// SendGrid documentation states that `unique_args` should only contain string values.
     public let uniqueArgs: [String: String]?
 
     public enum DeliveryEventType: String, Codable, CaseIterable, Sendable {
