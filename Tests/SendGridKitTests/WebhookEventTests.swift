@@ -65,7 +65,7 @@ struct WebhookEventTests {
         #expect(event.status == "5.0.0")
         #expect(event.type == .bounce)
         #expect(event.category == ["cat facts"])
-        #expect(event.sgEventId == "test_bounce_event_id")
+        #expect(event.sgEventID == "test_bounce_event_id")
         #expect(event.timestamp == Date(timeIntervalSince1970: 1_513_299_569))
     }
 
@@ -93,7 +93,7 @@ struct WebhookEventTests {
         #expect(event.event == .delivered)
         #expect(event.response == "250 OK")
         #expect(event.category == ["cat facts"])
-        #expect(event.sgEventId == "test_delivered_event_id")
+        #expect(event.sgEventID == "test_delivered_event_id")
     }
 
     @Test("Decode Deferred Event")
@@ -223,7 +223,7 @@ struct WebhookEventTests {
         #expect(event.urlOffset?.index == 0)
         #expect(event.urlOffset?.type == "html")
         #expect(event.category == ["category1", "category2"])
-        #expect(event.asmGroupId == 1)
+        #expect(event.asmGroupID == 1)
         #expect(event.newsletter?.newsletterID == "1943530")
     }
 
@@ -275,7 +275,7 @@ struct WebhookEventTests {
 
         #expect(event.email == "test@example.com")
         #expect(event.event == .spamreport)
-        #expect(event.sgEventId == "test_spam_event_id")
+        #expect(event.sgEventID == "test_spam_event_id")
     }
 
     @Test("Decode Unsubscribe Event")
@@ -326,7 +326,7 @@ struct WebhookEventTests {
 
         #expect(event.email == "test@example.com")
         #expect(event.event == .groupResubscribe)
-        #expect(event.asmGroupId == 10)
+        #expect(event.asmGroupID == 10)
         #expect(event.url == "http://www.example.com/")
     }
 
@@ -355,7 +355,7 @@ struct WebhookEventTests {
 
         #expect(event.email == "test@example.com")
         #expect(event.event == .groupUnsubscribe)
-        #expect(event.asmGroupId == 10)
+        #expect(event.asmGroupID == 10)
     }
 
     // MARK: - Account Status Change Event Tests
@@ -378,7 +378,7 @@ struct WebhookEventTests {
 
         #expect(event.event == "account_status_change")
         #expect(event.type == .complianceSuspend)
-        #expect(event.sgEventId == "test_account_status_event_id")
+        #expect(event.sgEventID == "test_account_status_event_id")
         #expect(event.timestamp == Date(timeIntervalSince1970: 1_709_142_428))
     }
 
@@ -407,7 +407,7 @@ struct WebhookEventTests {
 
         #expect(event.email == "test@example.com")
         #expect(event.event == .processed)
-        #expect(event.marketingCampaignId == 12345)
+        #expect(event.marketingCampaignID == 12345)
         #expect(event.marketingCampaignName == "campaign name")
     }
 
@@ -437,7 +437,7 @@ struct WebhookEventTests {
         #expect(event.email == "test@example.com")
         #expect(event.event == .processed)
         #expect(event.marketingCampaignVersion == "B")
-        #expect(event.marketingCampaignSplitId == 13471)
+        #expect(event.marketingCampaignSplitID == 13471)
     }
 
     // MARK: - Legacy Newsletter Event Tests
@@ -736,7 +736,7 @@ struct WebhookEventTests {
         switch events[0] {
         case .delivery(let event):
             #expect(event.event == .processed)
-            #expect(event.marketingCampaignId == 12345)
+            #expect(event.marketingCampaignID == 12345)
         default:
             Issue.record("Expected first event to be delivery")
         }
@@ -938,7 +938,7 @@ struct WebhookEventTests {
 
         #expect(event.email == "test@example.com")
         #expect(event.event == .open)
-        #expect(event.sgEventId == "test_real_world_open_event_id")
+        #expect(event.sgEventID == "test_real_world_open_event_id")
         #expect(event.ip == "192.168.1.100")
         #expect(event.sgContentType == "html")
 
@@ -990,13 +990,13 @@ struct WebhookEventTests {
         let event = try decoder.decode(SendGridReceivedEvent.self, from: data)
 
         #expect(event.event == "received")
-        #expect(event.recvMsgid == "test_received_msg_id")
-        #expect(event.sgEventId == "test_received_event_id")
-        #expect(event.apiKeyId == "test_api_key_id")
-        #expect(event.clientIp == "192.168.1.101")
+        #expect(event.recvMsgID == "test_received_msg_id")
+        #expect(event.sgEventID == "test_received_event_id")
+        #expect(event.apiKeyID == "test_api_key_id")
+        #expect(event.clientIP == "192.168.1.101")
         #expect(event.protocol == "SMTP")
         #expect(event.recipientCount == 1)
-        #expect(event.resellerId == "48997024")
+        #expect(event.resellerID == "48997024")
         #expect(event.size == 2173)
 
         let expectedDate = Date(timeIntervalSince1970: 1_729_555_201)
@@ -1041,14 +1041,14 @@ struct WebhookEventTests {
         let event = try decoder.decode(SendGridReceivedEvent.self, from: data)
 
         #expect(event.event == "received")
-        #expect(event.recvMsgid == "test_unix_received_msg_id")
-        #expect(event.sgEventId == "test_unix_received_event_id")
-        #expect(event.apiKeyId == "test_unix_api_key_id")
+        #expect(event.recvMsgID == "test_unix_received_msg_id")
+        #expect(event.sgEventID == "test_unix_received_event_id")
+        #expect(event.apiKeyID == "test_unix_api_key_id")
         #expect(event.apiVersion == "3")
-        #expect(event.clientIp == "192.168.1.102")
+        #expect(event.clientIP == "192.168.1.102")
         #expect(event.protocol == "HTTP")
         #expect(event.recipientCount == 1)
-        #expect(event.resellerId == "48997024")
+        #expect(event.resellerID == "48997024")
         #expect(event.size == 7513)
         #expect(event.useragent == "Swift SendGridKit/3.0.0")
 
@@ -1090,7 +1090,7 @@ struct WebhookEventTests {
         switch webhookEvent {
         case .received(let receivedEvent):
             #expect(receivedEvent.event == "received")
-            #expect(receivedEvent.recvMsgid == "test_webhook_received_msg_id")
+            #expect(receivedEvent.recvMsgID == "test_webhook_received_msg_id")
         case .delivery(_):
             Issue.record("Expected received event but got delivery event")
         case .engagement(_):
@@ -1144,7 +1144,7 @@ struct WebhookEventTests {
         #expect(decodedEvent.email == originalEvent.email)
         #expect(decodedEvent.event == originalEvent.event)
         #expect(decodedEvent.response == originalEvent.response)
-        #expect(decodedEvent.sgEventId == originalEvent.sgEventId)
+        #expect(decodedEvent.sgEventID == originalEvent.sgEventID)
         #expect(decodedEvent.timestamp == originalEvent.timestamp)
     }
 }

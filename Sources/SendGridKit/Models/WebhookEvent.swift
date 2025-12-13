@@ -90,7 +90,7 @@ public enum SendGridWebhookEvent: Codable, Sendable {
 /// Delivery events: bounce, delivered, deferred, dropped, processed, blocked
 public struct SendGridDeliveryEvent: Codable, Sendable {
     /// ID of the unsubscribe group that includes the recipient's email address.
-    public let asmGroupId: Int?
+    public let asmGroupID: Int?
     /// Grouping of SMTP failure messages into classifications.
     public let bounceClassification: String?
     /// Number of times SendGrid attempted to deliver this message.
@@ -109,13 +109,13 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
     /// IP address used to send the email.
     public let ip: String?
     /// Marketing campaign ID.
-    public let marketingCampaignId: Int?
+    public let marketingCampaignID: Int?
     /// Marketing campaign name.
     public let marketingCampaignName: String?
     /// Marketing campaign version for A/B tests.
     public let marketingCampaignVersion: String?
     /// Marketing campaign split ID for A/B tests.
-    public let marketingCampaignSplitId: Int?
+    public let marketingCampaignSplitID: Int?
     /// Newsletter information for legacy marketing campaigns.
     public let newsletter: SendGridWebhookEvent.Newsletter?
     /// IP Pool information.
@@ -125,11 +125,11 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
     /// Full HTTP response error from receiving server.
     public let response: String?
     /// Unique ID attached to this event.
-    public let sgEventId: String
+    public let sgEventID: String
     /// Unique message ID.
-    public let sgMessageId: String
+    public let sgMessageID: String
     /// Unique ID from the originating system.
-    public let smtpId: String?
+    public let smtpID: String?
     /// HTTP status code as string.
     public let status: String?
     /// Unix timestamp when the event occurred.
@@ -157,7 +157,7 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case asmGroupId = "asm_group_id"
+        case asmGroupID = "asm_group_id"
         case bounceClassification = "bounce_classification"
         case attempt
         case category
@@ -166,7 +166,7 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
         case from
         case event
         case ip
-        case marketingCampaignId = "marketing_campaign_id"
+        case marketingCampaignID = "marketing_campaign_id"
         case marketingCampaignName = "marketing_campaign_name"
         case marketingCampaignVersion = "marketing_campaign_version"
         case marketingCampaignSplitId = "marketing_campaign_split_id"
@@ -174,9 +174,9 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
         case pool
         case reason
         case response
-        case sgEventId = "sg_event_id"
-        case sgMessageId = "sg_message_id"
-        case smtpId = "smtp-id"
+        case sgEventID = "sg_event_id"
+        case sgMessageID = "sg_message_id"
+        case smtpID = "smtp-id"
         case status
         case timestamp
         case tls
@@ -188,7 +188,7 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
 /// Engagement events: click, open, spamreport, unsubscribe, group_resubscribe, group_unsubscribe
 public struct SendGridEngagementEvent: Codable, Sendable {
     /// ID of the unsubscribe group.
-    public let asmGroupId: Int?
+    public let asmGroupID: Int?
     /// Categories assigned to the message.
     /// Note: SendGrid can send categories as either a string or array. This field normalizes both to an array.
     public let category: [String]?
@@ -199,19 +199,19 @@ public struct SendGridEngagementEvent: Codable, Sendable {
     /// IP address of the recipient who engaged.
     public let ip: String?
     /// Marketing campaign ID.
-    public let marketingCampaignId: Int?
+    public let marketingCampaignID: Int?
     /// Marketing campaign name.
     public let marketingCampaignName: String?
     /// Newsletter information for legacy campaigns.
     public let newsletter: SendGridWebhookEvent.Newsletter?
     /// Unique ID attached to this event.
-    public let sgEventId: String
+    public let sgEventID: String
     /// Unique message ID.
     public let sgMessageId: String
     /// Whether Apple Mail Privacy Protection generated the open.
     public let sgMachineOpen: Bool?
     /// Unique ID from the originating system.
-    public let smtpId: String?
+    public let smtpID: String?
     /// Unix timestamp when the event occurred.
     public let timestamp: Date
     /// URL that was clicked (for click events).
@@ -241,18 +241,18 @@ public struct SendGridEngagementEvent: Codable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case asmGroupId = "asm_group_id"
+        case asmGroupID = "asm_group_id"
         case category
         case email
         case event
         case ip
-        case marketingCampaignId = "marketing_campaign_id"
+        case marketingCampaignID = "marketing_campaign_id"
         case marketingCampaignName = "marketing_campaign_name"
         case newsletter
-        case sgEventId = "sg_event_id"
-        case sgMessageId = "sg_message_id"
+        case sgEventID = "sg_event_id"
+        case sgMessageID = "sg_message_id"
         case sgMachineOpen = "sg_machine_open"
-        case smtpId = "smtp-id"
+        case smtpID = "smtp-id"
         case timestamp
         case url
         case urlOffset = "url_offset"
@@ -267,7 +267,7 @@ public struct SendGridAccountStatusChangeEvent: Codable, Sendable {
     /// Type of event.
     public let event: String
     /// Unique ID attached to this event.
-    public let sgEventId: String
+    public let sgEventID: String
     /// Unix timestamp when the event occurred.
     public let timestamp: Date
     /// Type of status change.
@@ -282,7 +282,7 @@ public struct SendGridAccountStatusChangeEvent: Codable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case event
-        case sgEventId = "sg_event_id"
+        case sgEventID = "sg_event_id"
         case timestamp
         case type
     }
@@ -293,23 +293,23 @@ public struct SendGridReceivedEvent: Codable, Sendable {
     /// Type of event (always "received").
     public let event: String
     /// Received message ID.
-    public let recvMsgid: String
+    public let recvMsgID: String
     /// Unique ID attached to this event.
-    public let sgEventId: String
+    public let sgEventID: String
     /// Unix timestamp when the event occurred.
     public let timestamp: Date
     /// API key ID used.
-    public let apiKeyId: String?
+    public let apiKeyID: String?
     /// API version used.
     public let apiVersion: String?
     /// Client IP address.
-    public let clientIp: String?
+    public let clientIP: String?
     /// Protocol used (SMTP, HTTP, etc.).
     public let `protocol`: String?
     /// Number of recipients.
     public let recipientCount: Int?
     /// Reseller ID.
-    public let resellerId: String?
+    public let resellerID: String?
     /// Size of the message in bytes.
     public let size: Int?
     /// User agent string.
@@ -348,15 +348,15 @@ public struct SendGridReceivedEvent: Codable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case event
-        case recvMsgid = "recv_msgid"
-        case sgEventId = "sg_event_id"
+        case recvMsgID = "recv_msgid"
+        case sgEventID = "sg_event_id"
         case timestamp
-        case apiKeyId = "api_key_id"
+        case apiKeyID = "api_key_id"
         case apiVersion = "api_version"
-        case clientIp = "client_ip"
+        case clientIP = "client_ip"
         case `protocol`
         case recipientCount = "recipient_count"
-        case resellerId = "reseller_id"
+        case resellerID = "reseller_id"
         case size
         case useragent
         case v3PayloadDetails = "v3_payload_details"
@@ -424,7 +424,7 @@ extension SendGridDeliveryEvent {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        asmGroupId = try container.decodeIfPresent(Int.self, forKey: .asmGroupId)
+        asmGroupID = try container.decodeIfPresent(Int.self, forKey: .asmGroupID)
         bounceClassification = try container.decodeIfPresent(String.self, forKey: .bounceClassification)
         attempt = try container.decodeIfPresent(Int.self, forKey: .attempt)
 
@@ -443,17 +443,17 @@ extension SendGridDeliveryEvent {
         from = try container.decodeIfPresent(String.self, forKey: .from)
         event = try container.decode(DeliveryEventType.self, forKey: .event)
         ip = try container.decodeIfPresent(String.self, forKey: .ip)
-        marketingCampaignId = try container.decodeIfPresent(Int.self, forKey: .marketingCampaignId)
+        marketingCampaignID = try container.decodeIfPresent(Int.self, forKey: .marketingCampaignID)
         marketingCampaignName = try container.decodeIfPresent(String.self, forKey: .marketingCampaignName)
         marketingCampaignVersion = try container.decodeIfPresent(String.self, forKey: .marketingCampaignVersion)
-        marketingCampaignSplitId = try container.decodeIfPresent(Int.self, forKey: .marketingCampaignSplitId)
+        marketingCampaignSplitID = try container.decodeIfPresent(Int.self, forKey: .marketingCampaignSplitId)
         newsletter = try container.decodeIfPresent(SendGridWebhookEvent.Newsletter.self, forKey: .newsletter)
         pool = try container.decodeIfPresent(SendGridWebhookEvent.Pool.self, forKey: .pool)
         reason = try container.decodeIfPresent(String.self, forKey: .reason)
         response = try container.decodeIfPresent(String.self, forKey: .response)
-        sgEventId = try container.decode(String.self, forKey: .sgEventId)
-        sgMessageId = try container.decode(String.self, forKey: .sgMessageId)
-        smtpId = try container.decodeIfPresent(String.self, forKey: .smtpId)
+        sgEventID = try container.decode(String.self, forKey: .sgEventID)
+        sgMessageID = try container.decode(String.self, forKey: .sgMessageID)
+        smtpID = try container.decodeIfPresent(String.self, forKey: .smtpID)
         status = try container.decodeIfPresent(String.self, forKey: .status)
         tls = try container.decodeIfPresent(Int.self, forKey: .tls)
         type = try container.decodeIfPresent(StatusType.self, forKey: .type)
@@ -467,7 +467,7 @@ extension SendGridDeliveryEvent {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
-        try container.encodeIfPresent(asmGroupId, forKey: .asmGroupId)
+        try container.encodeIfPresent(asmGroupID, forKey: .asmGroupID)
         try container.encodeIfPresent(bounceClassification, forKey: .bounceClassification)
         try container.encodeIfPresent(attempt, forKey: .attempt)
         try container.encodeIfPresent(category, forKey: .category)
@@ -476,17 +476,17 @@ extension SendGridDeliveryEvent {
         try container.encodeIfPresent(from, forKey: .from)
         try container.encode(event, forKey: .event)
         try container.encodeIfPresent(ip, forKey: .ip)
-        try container.encodeIfPresent(marketingCampaignId, forKey: .marketingCampaignId)
+        try container.encodeIfPresent(marketingCampaignID, forKey: .marketingCampaignID)
         try container.encodeIfPresent(marketingCampaignName, forKey: .marketingCampaignName)
         try container.encodeIfPresent(marketingCampaignVersion, forKey: .marketingCampaignVersion)
-        try container.encodeIfPresent(marketingCampaignSplitId, forKey: .marketingCampaignSplitId)
+        try container.encodeIfPresent(marketingCampaignSplitID, forKey: .marketingCampaignSplitId)
         try container.encodeIfPresent(newsletter, forKey: .newsletter)
         try container.encodeIfPresent(pool, forKey: .pool)
         try container.encodeIfPresent(reason, forKey: .reason)
         try container.encodeIfPresent(response, forKey: .response)
-        try container.encode(sgEventId, forKey: .sgEventId)
-        try container.encode(sgMessageId, forKey: .sgMessageId)
-        try container.encodeIfPresent(smtpId, forKey: .smtpId)
+        try container.encode(sgEventID, forKey: .sgEventID)
+        try container.encode(sgMessageID, forKey: .sgMessageID)
+        try container.encodeIfPresent(smtpID, forKey: .smtpID)
         try container.encodeIfPresent(status, forKey: .status)
         try container.encodeIfPresent(tls, forKey: .tls)
         try container.encodeIfPresent(type, forKey: .type)
@@ -501,7 +501,7 @@ extension SendGridEngagementEvent {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        asmGroupId = try container.decodeIfPresent(Int.self, forKey: .asmGroupId)
+        asmGroupID = try container.decodeIfPresent(Int.self, forKey: .asmGroupID)
 
         // Handle category as either string or array, normalize to array
         if container.contains(.category) {
@@ -516,13 +516,13 @@ extension SendGridEngagementEvent {
         email = try container.decode(String.self, forKey: .email)
         event = try container.decode(EngagementEventType.self, forKey: .event)
         ip = try container.decodeIfPresent(String.self, forKey: .ip)
-        marketingCampaignId = try container.decodeIfPresent(Int.self, forKey: .marketingCampaignId)
+        marketingCampaignID = try container.decodeIfPresent(Int.self, forKey: .marketingCampaignID)
         marketingCampaignName = try container.decodeIfPresent(String.self, forKey: .marketingCampaignName)
         newsletter = try container.decodeIfPresent(SendGridWebhookEvent.Newsletter.self, forKey: .newsletter)
-        sgEventId = try container.decode(String.self, forKey: .sgEventId)
-        sgMessageId = try container.decode(String.self, forKey: .sgMessageId)
+        sgEventID = try container.decode(String.self, forKey: .sgEventID)
+        sgMessageId = try container.decode(String.self, forKey: .sgMessageID)
         sgMachineOpen = try container.decodeIfPresent(Bool.self, forKey: .sgMachineOpen)
-        smtpId = try container.decodeIfPresent(String.self, forKey: .smtpId)
+        smtpID = try container.decodeIfPresent(String.self, forKey: .smtpID)
         url = try container.decodeIfPresent(String.self, forKey: .url)
         urlOffset = try container.decodeIfPresent(UrlOffset.self, forKey: .urlOffset)
         useragent = try container.decodeIfPresent(String.self, forKey: .useragent)
@@ -537,18 +537,18 @@ extension SendGridEngagementEvent {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
-        try container.encodeIfPresent(asmGroupId, forKey: .asmGroupId)
+        try container.encodeIfPresent(asmGroupID, forKey: .asmGroupID)
         try container.encodeIfPresent(category, forKey: .category)
         try container.encode(email, forKey: .email)
         try container.encode(event, forKey: .event)
         try container.encodeIfPresent(ip, forKey: .ip)
-        try container.encodeIfPresent(marketingCampaignId, forKey: .marketingCampaignId)
+        try container.encodeIfPresent(marketingCampaignID, forKey: .marketingCampaignID)
         try container.encodeIfPresent(marketingCampaignName, forKey: .marketingCampaignName)
         try container.encodeIfPresent(newsletter, forKey: .newsletter)
-        try container.encode(sgEventId, forKey: .sgEventId)
-        try container.encode(sgMessageId, forKey: .sgMessageId)
+        try container.encode(sgEventID, forKey: .sgEventID)
+        try container.encode(sgMessageId, forKey: .sgMessageID)
         try container.encodeIfPresent(sgMachineOpen, forKey: .sgMachineOpen)
-        try container.encodeIfPresent(smtpId, forKey: .smtpId)
+        try container.encodeIfPresent(smtpID, forKey: .smtpID)
         try container.encodeIfPresent(url, forKey: .url)
         try container.encodeIfPresent(urlOffset, forKey: .urlOffset)
         try container.encodeIfPresent(useragent, forKey: .useragent)
@@ -565,14 +565,14 @@ extension SendGridReceivedEvent {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         event = try container.decode(String.self, forKey: .event)
-        recvMsgid = try container.decode(String.self, forKey: .recvMsgid)
-        sgEventId = try container.decode(String.self, forKey: .sgEventId)
-        apiKeyId = try container.decodeIfPresent(String.self, forKey: .apiKeyId)
+        recvMsgID = try container.decode(String.self, forKey: .recvMsgID)
+        sgEventID = try container.decode(String.self, forKey: .sgEventID)
+        apiKeyID = try container.decodeIfPresent(String.self, forKey: .apiKeyID)
         apiVersion = try container.decodeIfPresent(String.self, forKey: .apiVersion)
-        clientIp = try container.decodeIfPresent(String.self, forKey: .clientIp)
+        clientIP = try container.decodeIfPresent(String.self, forKey: .clientIP)
         `protocol` = try container.decodeIfPresent(String.self, forKey: .protocol)
         recipientCount = try container.decodeIfPresent(Int.self, forKey: .recipientCount)
-        resellerId = try container.decodeIfPresent(String.self, forKey: .resellerId)
+        resellerID = try container.decodeIfPresent(String.self, forKey: .resellerID)
         size = try container.decodeIfPresent(Int.self, forKey: .size)
         useragent = try container.decodeIfPresent(String.self, forKey: .useragent)
         v3PayloadDetails = try container.decodeIfPresent(V3PayloadDetails.self, forKey: .v3PayloadDetails)
@@ -586,14 +586,14 @@ extension SendGridReceivedEvent {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
         try container.encode(event, forKey: .event)
-        try container.encode(recvMsgid, forKey: .recvMsgid)
-        try container.encode(sgEventId, forKey: .sgEventId)
-        try container.encodeIfPresent(apiKeyId, forKey: .apiKeyId)
+        try container.encode(recvMsgID, forKey: .recvMsgID)
+        try container.encode(sgEventID, forKey: .sgEventID)
+        try container.encodeIfPresent(apiKeyID, forKey: .apiKeyID)
         try container.encodeIfPresent(apiVersion, forKey: .apiVersion)
-        try container.encodeIfPresent(clientIp, forKey: .clientIp)
+        try container.encodeIfPresent(clientIP, forKey: .clientIP)
         try container.encodeIfPresent(`protocol`, forKey: .protocol)
         try container.encodeIfPresent(recipientCount, forKey: .recipientCount)
-        try container.encodeIfPresent(resellerId, forKey: .resellerId)
+        try container.encodeIfPresent(resellerID, forKey: .resellerID)
         try container.encodeIfPresent(size, forKey: .size)
         try container.encodeIfPresent(useragent, forKey: .useragent)
         try container.encodeIfPresent(v3PayloadDetails, forKey: .v3PayloadDetails)
@@ -608,7 +608,7 @@ extension SendGridAccountStatusChangeEvent {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         event = try container.decode(String.self, forKey: .event)
-        sgEventId = try container.decode(String.self, forKey: .sgEventId)
+        sgEventID = try container.decode(String.self, forKey: .sgEventID)
         type = try container.decode(AccountStatusType.self, forKey: .type)
 
         // Handle timestamp as Unix timestamp
@@ -620,7 +620,7 @@ extension SendGridAccountStatusChangeEvent {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
         try container.encode(event, forKey: .event)
-        try container.encode(sgEventId, forKey: .sgEventId)
+        try container.encode(sgEventID, forKey: .sgEventID)
         try container.encode(type, forKey: .type)
 
         // Encode timestamp as Unix timestamp
@@ -893,7 +893,7 @@ public struct AllEventWebhooks: Codable, Sendable {
 
 struct ToogleEventWebhookSignatureVerification: Codable, Sendable {
     public let enabled: Bool
-    
+
     public init(enabled: Bool) {
         self.enabled = enabled
     }

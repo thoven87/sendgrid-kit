@@ -6,7 +6,7 @@ import NIOHTTP1
 
 /// A client for SendGrid Event Webhook
 public struct SendGridWebhookClient: Sendable {
-    
+
     private let apiURL: String
     private let httpClient: HTTPClient
     private let apiKey: String
@@ -40,7 +40,7 @@ public struct SendGridWebhookClient: Sendable {
         self.apiKey = apiKey
         self.apiURL = forEU ? "https://api.eu.sendgrid.com/v3" : "https://api.sendgrid.com/v3"
     }
-    
+
     /// This endpoint allows you to create a new Event Webhook.
     /// - Parameters:
     ///   - input: The request body
