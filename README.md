@@ -295,7 +295,7 @@ SendGrid webhooks can be secured using ECDSA signature verification to ensure th
 
 ```swift
 import SendGridKit
-import NIO
+import Vapor
 
 // In your webhook handler (e.g., Vapor route handler)
 func handleWebhook(_ req: Request) async throws -> HTTPStatus {
@@ -306,8 +306,7 @@ func handleWebhook(_ req: Request) async throws -> HTTPStatus {
     }
     
     // Get the raw body as ByteBuffer
-    let body = req.body.data ?? ByteBuffer()
-    
+    let body = req.bodyData
     // Your public key from SendGrid (base64 encoded)
     let publicKey = "YOUR_SENDGRID_PUBLIC_KEY"
     

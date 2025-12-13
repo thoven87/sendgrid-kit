@@ -35,6 +35,19 @@ Send simple emails or leverage the full capabilities of [SendGrid's V3 API](http
 - ``BulkEmailValidationJob``
 - ``BulkEmailValidationJobStatus``
 
+### Webhooks
+
+- ``SendGridWebhookClient``
+- ``SendGridWebhookEvent``
+- ``EventWebhookInput``
+- ``SendGridTestWebhookInput``
+- ``SendGridDeliveryEvent``
+- ``SendGridEngagementEvent``
+- ``SendGridAccountStatusChangeEvent``
+- ``SendGridReceivedEvent``
+- ``WebhookSettingsResponse``
+- ``SendGridWebhookSignatureError``
+
 ### Errors
 
 - ``SendGridError``

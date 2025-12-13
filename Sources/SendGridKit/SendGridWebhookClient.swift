@@ -29,7 +29,7 @@ public struct SendGridWebhookClient: Sendable {
         return formatter
     }()
 
-    /// Initialize a new `SendGridClient`
+    /// Initialize a new `SendGridWebhookClient`
     ///
     /// - Parameters:
     ///   - httpClient: The `HTTPClient` to use for sending requests
