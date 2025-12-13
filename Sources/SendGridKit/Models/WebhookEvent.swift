@@ -682,6 +682,44 @@ public struct EventWebhookInput: Codable, Sendable {
     /// This should be your OAuth server or service provider. When passing data in this field, you must also include the oauth_client_id property.
     public let oauthTokenUrl: String?
 
+    public init(
+        enabled: Bool,
+        url: String,
+        groupResubscribe: Bool,
+        delivered: Bool,
+        groupUnsubscribe: Bool,
+        spamReport: Bool,
+        bounce: Bool,
+        deferred: Bool,
+        unsubscribe: Bool,
+        processed: Bool,
+        open: Bool,
+        click: Bool,
+        dropped: Bool,
+        friendlyName: String?,
+        oauthClientId: String?,
+        oauthClientSecret: String?,
+        oauthTokenUrl: String?
+    ) {
+        self.enabled = enabled
+        self.url = url
+        self.groupResubscribe = groupResubscribe
+        self.delivered = delivered
+        self.groupUnsubscribe = groupUnsubscribe
+        self.spamReport = spamReport
+        self.bounce = bounce
+        self.deferred = deferred
+        self.unsubscribe = unsubscribe
+        self.processed = processed
+        self.open = open
+        self.click = click
+        self.dropped = dropped
+        self.friendlyName = friendlyName
+        self.oauthClientId = oauthClientId
+        self.oauthClientSecret = oauthClientSecret
+        self.oauthTokenUrl = oauthTokenUrl
+    }
+
     enum CodingKeys: String, CodingKey {
         case enabled
         case url
@@ -797,19 +835,33 @@ public struct WebhookSettingsResponse: Codable, Sendable {
 
 public struct SendGridTestWebhookInput: Codable, Sendable {
     /// The ID of the Event Webhook you want to retrieve.
-    let id: String
+    public let id: String
     /// The URL where you would like the test notification to be sent.
-    let url: String
+    public let url: String
     /// The client ID Twilio SendGrid sends to your OAuth server or service provider to generate an OAuth access token.
     /// When passing data in this property, you must also include the oauth_token_url property.
-    let oauthClientId: String?
+    public let oauthClientId: String?
     /// The oauth_client_secret is needed only once to create an access token.
     /// SendGrid will store this secret, allowing you to update your Client ID and Token URL without passing the secret to SendGrid again.
     /// When passing data in this field, you must also include the oauth_client_id and oauth_token_url properties.
-    let oauthClientSecret: String?
+    public let oauthClientSecret: String?
     /// The URL where Twilio SendGrid sends the Client ID and Client Secret to generate an access token.
     /// This should be your OAuth server or service provider. When passing data in this field, you must also include the oauth_client_id property.
-    let oauthTokenUrl: String?
+    public let oauthTokenUrl: String?
+
+    public init(
+        id: String,
+        url: String,
+        oauthClientId: String?,
+        oauthClientSecret: String?,
+        oauthTokenUrl: String?
+    ) {
+        self.id = id
+        self.url = url
+        self.oauthClientId = oauthClientId
+        self.oauthClientSecret = oauthClientSecret
+        self.oauthTokenUrl = oauthTokenUrl
+    }
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -823,10 +875,15 @@ public struct SendGridTestWebhookInput: Codable, Sendable {
 public struct AllEventWebhooks: Codable, Sendable {
     /// The maximum number of Event Webhooks you can have enabled under your current Twilio SendGrid plan.
     /// See the Twilio SendGrid pricing page for more information about the features available with each plan.
-    let maxAllowed: Int
+    public let maxAllowed: Int
     /// An array of Event Webhook objects. Each object represents one of your webhooks and contains its configuration settings,
     /// including which events it is set to send in the POST request, the URL where it will send those events, and the webhook's ID.
-    let webhooks: [WebhookSettingsResponse]
+    public let webhooks: [WebhookSettingsResponse]
+
+    public init(maxAllowed: Int, webhooks: [WebhookSettingsResponse]) {
+        self.maxAllowed = maxAllowed
+        self.webhooks = webhooks
+    }
 
     enum CodingKeys: String, CodingKey {
         case maxAllowed = "max_allowed"
@@ -835,7 +892,11 @@ public struct AllEventWebhooks: Codable, Sendable {
 }
 
 struct ToogleEventWebhookSignatureVerification: Codable, Sendable {
-    let enabled: Bool
+    public let enabled: Bool
+    
+    public init(enabled: Bool) {
+        self.enabled = enabled
+    }
 }
 
 public struct EventWebhookSignaturePublicKeyResponse: Codable, Sendable {
@@ -844,6 +905,11 @@ public struct EventWebhookSignaturePublicKeyResponse: Codable, Sendable {
     public let id: String
     /// The public key you can use to verify the Twilio SendGrid signature.
     public let publicKey: String
+
+    public init(id: String, publicKey: String) {
+        self.id = id
+        self.publicKey = publicKey
+    }
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -854,14 +920,21 @@ public struct EventWebhookSignaturePublicKeyResponse: Codable, Sendable {
 public struct ParseWebhookSettingsResponse: Codable, Sendable {
     /// The public URL where you would like SendGrid to POST the data parsed from your email.
     /// Any emails sent with the given hostname provided (whose MX records have been updated to point to SendGrid) will be parsed and POSTed to this URL.
-    let url: String
+    public let url: String
     /// A specific and unique domain or subdomain that you have created to use exclusively to parse your incoming email. For example, parse.yourdomain.com.
-    let hostname: String
+    public let hostname: String
     /// Indicates if you would like SendGrid to check the content parsed from your emails for spam before POSTing them to your domain.
-    let spamCheck: Bool
+    public let spamCheck: Bool
     /// Indicates if you would like SendGrid to post the original MIME-type content of your parsed email.
     /// When this parameter is set to true, SendGrid will send a JSON payload of the content of your email.
-    let sendRaw: Bool
+    public let sendRaw: Bool
+
+    public init(url: String, hostname: String, spamCheck: Bool, sendRaw: Bool) {
+        self.url = url
+        self.hostname = hostname
+        self.spamCheck = spamCheck
+        self.sendRaw = sendRaw
+    }
 
     enum CodingKeys: String, CodingKey {
         case url
@@ -878,12 +951,12 @@ public enum SendGridInboundParseAggregateBy: String, Codable, Sendable {
 
 public struct ParseWebhookSettingsStatistics: Codable, Sendable {
     /// The date that the stats were collected.
-    let date: Date
+    public let date: Date
     /// The Parse Webhook usage statistics.
-    let stats: [Metric]
+    public let stats: [Metric]
 
-    struct Metric: Codable {
+    public struct Metric: Codable, Sendable {
         /// The number of emails received and parsed by the Parse Webhook.
-        let received: Int
+        public let received: Int
     }
 }

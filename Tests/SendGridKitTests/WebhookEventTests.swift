@@ -5,6 +5,34 @@ import Testing
 @Suite("SendGrid Webhook Event Tests")
 struct WebhookEventTests {
 
+    let client: SendGridWebhookClient
+    // TODO: Replace with `false` when you have a valid API key
+    let credentialsAreInvalid = true
+
+    init() {
+        // TODO: Replace with a valid API key to test
+        client = SendGridWebhookClient(httpClient: .shared, apiKey: "YOUR-WEBHOOK-API-KEY")
+    }
+
+    @Test("Test Notification")
+    func validateEmail() async throws {
+        let testRequest = SendGridTestWebhookInput(
+            id: "test",
+            url: "https://example.com",
+            oauthClientId: nil,
+            oauthClientSecret: nil,
+            oauthTokenUrl: nil
+        )
+
+        await withKnownIssue {
+            await #expect(throws: Never.self) {
+                try await client.testEventWebhook(testRequest)
+            }
+        } when: {
+            credentialsAreInvalid
+        }
+    }
+
     // MARK: - Delivery Event Tests
 
     @Test("Decode Bounce Event")
