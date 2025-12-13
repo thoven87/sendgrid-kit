@@ -196,7 +196,7 @@ struct WebhookEventTests {
         #expect(event.urlOffset?.type == "html")
         #expect(event.category == ["category1", "category2"])
         #expect(event.asmGroupId == 1)
-        #expect(event.newsletter?.newsletterId == "1943530")
+        #expect(event.newsletter?.newsletterID == "1943530")
     }
 
     @Test("Decode Open Event")
@@ -439,9 +439,9 @@ struct WebhookEventTests {
 
         #expect(event.email == "test@example.com")
         #expect(event.event == .unsubscribe)
-        #expect(event.newsletter?.newsletterId == "1943530")
-        #expect(event.newsletter?.newsletterUserListId == "10557865")
-        #expect(event.newsletter?.newsletterSendId == "2308608")
+        #expect(event.newsletter?.newsletterID == "1943530")
+        #expect(event.newsletter?.newsletterUserListID == "10557865")
+        #expect(event.newsletter?.newsletterSendID == "2308608")
         #expect(event.category == ["Tests", "Newsletter"])
     }
 
