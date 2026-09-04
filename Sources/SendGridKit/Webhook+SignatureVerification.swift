@@ -73,10 +73,16 @@ extension SendGridWebhookEvent {
             throw SendGridWebhookSignatureError.invalidPublicKey
         }
 
-        // Verify the signature
+        // Parse the signature.
+        // SendGrid sends DER/ASN.1 encoded signatures (standard ECDSA wire format).
+        // A raw IEEE P1363 (fixed 64-byte r||s) fallback is retained for compatibility.
         let ecdsaSignature: P256.Signing.ECDSASignature
         do {
-            ecdsaSignature = try P256.Signing.ECDSASignature(rawRepresentation: signatureData)
+            if let sig = try? P256.Signing.ECDSASignature(derRepresentation: signatureData) {
+                ecdsaSignature = sig
+            } else {
+                ecdsaSignature = try P256.Signing.ECDSASignature(rawRepresentation: signatureData)
+            }
         } catch {
             throw SendGridWebhookSignatureError.invalidSignature
         }
