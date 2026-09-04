@@ -94,6 +94,7 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
     /// Grouping of SMTP failure messages into classifications.
     public let bounceClassification: String?
     /// Number of times SendGrid attempted to deliver this message.
+    /// Note: SendGrid sends this as a string on the wire (e.g. `"5"`), not an integer.
     public let attempt: Int?
     /// Categories assigned to the message.
     /// Note: SendGrid can send categories as either a string or array. This field normalizes both to an array.
@@ -134,13 +135,15 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
     public let status: String?
     /// Unix timestamp when the event occurred.
     public let timestamp: Date
-    /// TLS encryption flag.
-    public let tls: Int?
+    /// Whether the message was sent using TLS encryption.
+    /// Note: SendGrid sends this as an integer on the wire (`0` or `1`) despite documenting it as Boolean.
+    public let tls: Bool?
     /// Type of bounce or status change.
     public let type: StatusType?
-    /// Custom arguments passed with the message.
-    /// SendGrid documentation states that `unique_args` should only contain string values.
+    /// Custom arguments set via the SMTP API or v2 Mail Send (`unique_args`).
     public let uniqueArgs: [String: String]?
+    /// Custom arguments set via the v3 Mail Send API (`custom_args`).
+    public let customArgs: [String: String]?
 
     public enum DeliveryEventType: String, Codable, CaseIterable, Sendable {
         case bounce
@@ -169,7 +172,7 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
         case marketingCampaignID = "marketing_campaign_id"
         case marketingCampaignName = "marketing_campaign_name"
         case marketingCampaignVersion = "marketing_campaign_version"
-        case marketingCampaignSplitId = "marketing_campaign_split_id"
+        case marketingCampaignSplitID = "marketing_campaign_split_id"
         case newsletter
         case pool
         case reason
@@ -182,6 +185,7 @@ public struct SendGridDeliveryEvent: Codable, Sendable {
         case tls
         case type
         case uniqueArgs = "unique_args"
+        case customArgs = "custom_args"
     }
 }
 
@@ -207,7 +211,7 @@ public struct SendGridEngagementEvent: Codable, Sendable {
     /// Unique ID attached to this event.
     public let sgEventID: String
     /// Unique message ID.
-    public let sgMessageId: String
+    public let sgMessageID: String
     /// Whether Apple Mail Privacy Protection generated the open.
     public let sgMachineOpen: Bool?
     /// Unique ID from the originating system.
@@ -222,9 +226,10 @@ public struct SendGridEngagementEvent: Codable, Sendable {
     public let useragent: String?
     /// Content type of the email (html or text).
     public let sgContentType: String?
-    /// Custom arguments passed with the message.
-    /// Note: SendGrid can send categories as either a string or array. This field normalizes both to an array.
+    /// Custom arguments set via the SMTP API or v2 Mail Send (`unique_args`).
     public let uniqueArgs: [String: String]?
+    /// Custom arguments set via the v3 Mail Send API (`custom_args`).
+    public let customArgs: [String: String]?
 
     public enum EngagementEventType: String, Codable, CaseIterable, Sendable {
         case click
@@ -259,6 +264,7 @@ public struct SendGridEngagementEvent: Codable, Sendable {
         case useragent
         case sgContentType = "sg_content_type"
         case uniqueArgs = "unique_args"
+        case customArgs = "custom_args"
     }
 }
 
@@ -426,7 +432,14 @@ extension SendGridDeliveryEvent {
 
         asmGroupID = try container.decodeIfPresent(Int.self, forKey: .asmGroupID)
         bounceClassification = try container.decodeIfPresent(String.self, forKey: .bounceClassification)
-        attempt = try container.decodeIfPresent(Int.self, forKey: .attempt)
+
+        // SendGrid documents `attempt` as Integer but sends it as a string on the wire (e.g. "5").
+        // Accept both forms so real webhooks and hand-crafted test payloads both decode correctly.
+        if let string = try? container.decodeIfPresent(String.self, forKey: .attempt) {
+            attempt = Int(string)
+        } else {
+            attempt = try container.decodeIfPresent(Int.self, forKey: .attempt)
+        }
 
         // Handle category as either string or array, normalize to array
         if container.contains(.category) {
@@ -446,7 +459,7 @@ extension SendGridDeliveryEvent {
         marketingCampaignID = try container.decodeIfPresent(Int.self, forKey: .marketingCampaignID)
         marketingCampaignName = try container.decodeIfPresent(String.self, forKey: .marketingCampaignName)
         marketingCampaignVersion = try container.decodeIfPresent(String.self, forKey: .marketingCampaignVersion)
-        marketingCampaignSplitID = try container.decodeIfPresent(Int.self, forKey: .marketingCampaignSplitId)
+        marketingCampaignSplitID = try container.decodeIfPresent(Int.self, forKey: .marketingCampaignSplitID)
         newsletter = try container.decodeIfPresent(SendGridWebhookEvent.Newsletter.self, forKey: .newsletter)
         pool = try container.decodeIfPresent(SendGridWebhookEvent.Pool.self, forKey: .pool)
         reason = try container.decodeIfPresent(String.self, forKey: .reason)
@@ -455,9 +468,16 @@ extension SendGridDeliveryEvent {
         sgMessageID = try container.decode(String.self, forKey: .sgMessageID)
         smtpID = try container.decodeIfPresent(String.self, forKey: .smtpID)
         status = try container.decodeIfPresent(String.self, forKey: .status)
-        tls = try container.decodeIfPresent(Int.self, forKey: .tls)
+        // SendGrid documents `tls` as Boolean but sends 0 / 1 on the wire.
+        // Accept both integer (0/1) and boolean wire representations.
+        if let intValue = try? container.decodeIfPresent(Int.self, forKey: .tls) {
+            tls = intValue != 0
+        } else {
+            tls = try container.decodeIfPresent(Bool.self, forKey: .tls)
+        }
         type = try container.decodeIfPresent(StatusType.self, forKey: .type)
         uniqueArgs = try container.decodeIfPresent([String: String].self, forKey: .uniqueArgs)
+        customArgs = try container.decodeIfPresent([String: String].self, forKey: .customArgs)
 
         // Handle timestamp as Unix timestamp
         let timestampValue = try container.decode(Double.self, forKey: .timestamp)
@@ -479,7 +499,7 @@ extension SendGridDeliveryEvent {
         try container.encodeIfPresent(marketingCampaignID, forKey: .marketingCampaignID)
         try container.encodeIfPresent(marketingCampaignName, forKey: .marketingCampaignName)
         try container.encodeIfPresent(marketingCampaignVersion, forKey: .marketingCampaignVersion)
-        try container.encodeIfPresent(marketingCampaignSplitID, forKey: .marketingCampaignSplitId)
+        try container.encodeIfPresent(marketingCampaignSplitID, forKey: .marketingCampaignSplitID)
         try container.encodeIfPresent(newsletter, forKey: .newsletter)
         try container.encodeIfPresent(pool, forKey: .pool)
         try container.encodeIfPresent(reason, forKey: .reason)
@@ -491,6 +511,7 @@ extension SendGridDeliveryEvent {
         try container.encodeIfPresent(tls, forKey: .tls)
         try container.encodeIfPresent(type, forKey: .type)
         try container.encodeIfPresent(uniqueArgs, forKey: .uniqueArgs)
+        try container.encodeIfPresent(customArgs, forKey: .customArgs)
 
         // Encode timestamp as Unix timestamp
         try container.encode(timestamp.timeIntervalSince1970, forKey: .timestamp)
@@ -520,7 +541,7 @@ extension SendGridEngagementEvent {
         marketingCampaignName = try container.decodeIfPresent(String.self, forKey: .marketingCampaignName)
         newsletter = try container.decodeIfPresent(SendGridWebhookEvent.Newsletter.self, forKey: .newsletter)
         sgEventID = try container.decode(String.self, forKey: .sgEventID)
-        sgMessageId = try container.decode(String.self, forKey: .sgMessageID)
+        sgMessageID = try container.decode(String.self, forKey: .sgMessageID)
         sgMachineOpen = try container.decodeIfPresent(Bool.self, forKey: .sgMachineOpen)
         smtpID = try container.decodeIfPresent(String.self, forKey: .smtpID)
         url = try container.decodeIfPresent(String.self, forKey: .url)
@@ -528,6 +549,7 @@ extension SendGridEngagementEvent {
         useragent = try container.decodeIfPresent(String.self, forKey: .useragent)
         sgContentType = try container.decodeIfPresent(String.self, forKey: .sgContentType)
         uniqueArgs = try container.decodeIfPresent([String: String].self, forKey: .uniqueArgs)
+        customArgs = try container.decodeIfPresent([String: String].self, forKey: .customArgs)
 
         // Handle timestamp as Unix timestamp
         let timestampValue = try container.decode(Double.self, forKey: .timestamp)
@@ -546,7 +568,7 @@ extension SendGridEngagementEvent {
         try container.encodeIfPresent(marketingCampaignName, forKey: .marketingCampaignName)
         try container.encodeIfPresent(newsletter, forKey: .newsletter)
         try container.encode(sgEventID, forKey: .sgEventID)
-        try container.encode(sgMessageId, forKey: .sgMessageID)
+        try container.encode(sgMessageID, forKey: .sgMessageID)
         try container.encodeIfPresent(sgMachineOpen, forKey: .sgMachineOpen)
         try container.encodeIfPresent(smtpID, forKey: .smtpID)
         try container.encodeIfPresent(url, forKey: .url)
@@ -554,6 +576,7 @@ extension SendGridEngagementEvent {
         try container.encodeIfPresent(useragent, forKey: .useragent)
         try container.encodeIfPresent(sgContentType, forKey: .sgContentType)
         try container.encodeIfPresent(uniqueArgs, forKey: .uniqueArgs)
+        try container.encodeIfPresent(customArgs, forKey: .customArgs)
 
         // Encode timestamp as Unix timestamp
         try container.encode(timestamp.timeIntervalSince1970, forKey: .timestamp)

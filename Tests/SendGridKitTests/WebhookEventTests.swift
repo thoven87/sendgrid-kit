@@ -98,6 +98,8 @@ struct WebhookEventTests {
 
     @Test("Decode Deferred Event")
     func decodeDeferredEvent() throws {
+        // SendGrid sends `attempt` as a quoted string on the wire (e.g. "5"), matching the
+        // official example at https://www.twilio.com/docs/sendgrid/for-developers/tracking-events/event
         let json = """
             {
                 "email": "test@example.com",
@@ -110,14 +112,11 @@ struct WebhookEventTests {
                 "sg_event_id": "test_deferred_event_id",
                 "sg_message_id": "test_deferred_message_id",
                 "response": "400 try again later",
-                "attempt": 5
+                "attempt": "5"
             }
             """
 
-        let data = json.data(using: .utf8)!
-        let decoder = JSONDecoder()
-
-        let event = try decoder.decode(SendGridDeliveryEvent.self, from: data)
+        let event = try JSONDecoder().decode(SendGridDeliveryEvent.self, from: json.data(using: .utf8)!)
 
         #expect(event.email == "test@example.com")
         #expect(event.domain == "example.com")
@@ -125,6 +124,24 @@ struct WebhookEventTests {
         #expect(event.event == .deferred)
         #expect(event.attempt == 5)
         #expect(event.response == "400 try again later")
+    }
+
+    @Test("Decode Deferred Event with integer attempt (legacy form)")
+    func decodeDeferredEventIntegerAttempt() throws {
+        // Guard against payloads that send attempt as a bare integer.
+        let json = """
+            {
+                "email": "test@example.com",
+                "timestamp": 1513299569,
+                "event": "deferred",
+                "sg_event_id": "test_deferred_event_id",
+                "sg_message_id": "test_deferred_message_id",
+                "attempt": 3
+            }
+            """
+
+        let event = try JSONDecoder().decode(SendGridDeliveryEvent.self, from: json.data(using: .utf8)!)
+        #expect(event.attempt == 3)
     }
 
     @Test("Decode Dropped Event")
@@ -812,9 +829,9 @@ struct WebhookEventTests {
         #expect(engagementEvents.count == 1)  // click
     }
 
-    @Test("Working with custom arguments")
-    func workingWithCustomArguments() throws {
-        let eventWithCustomArgs = """
+    @Test("Working with custom arguments (unique_args — SMTP API / v2)")
+    func workingWithUniqueArgs() throws {
+        let json = """
             {
                 "email": "customer@example.com",
                 "timestamp": 1513299569,
@@ -824,32 +841,113 @@ struct WebhookEventTests {
                 "url": "https://shop.example.com/product/123",
                 "unique_args": {
                     "user_id": "12345",
-                    "product_id": "PROD-123",
-                    "campaign_type": "abandoned_cart",
-                    "is_premium": "true",
-                    "discount_percent": "15.5"
+                    "campaign_type": "abandoned_cart"
                 }
             }
             """
 
-        let data = eventWithCustomArgs.data(using: .utf8)!
-        let webhookEvent = try JSONDecoder().decode(SendGridWebhookEvent.self, from: data)
+        let webhookEvent = try JSONDecoder().decode(SendGridWebhookEvent.self, from: json.data(using: .utf8)!)
 
-        if case .engagement(let event) = webhookEvent {
-            #expect(event.event == .click)
-            #expect(event.url == "https://shop.example.com/product/123")
-
-            // Extract custom arguments - all values are strings as per SendGrid documentation
-            if let uniqueArgs = event.uniqueArgs {
-                #expect(uniqueArgs["user_id"] == "12345")
-                #expect(uniqueArgs["product_id"] == "PROD-123")
-                #expect(uniqueArgs["campaign_type"] == "abandoned_cart")
-                #expect(uniqueArgs["is_premium"] == "true")
-                #expect(uniqueArgs["discount_percent"] == "15.5")
-            }
-        } else {
-            Issue.record("Expected engagement event")
+        guard case .engagement(let event) = webhookEvent else {
+            Issue.record("Expected engagement event"); return
         }
+        #expect(event.uniqueArgs?["user_id"] == "12345")
+        #expect(event.uniqueArgs?["campaign_type"] == "abandoned_cart")
+        #expect(event.customArgs == nil)
+    }
+
+    @Test("Working with custom_args (v3 Mail Send)")
+    func workingWithCustomArgs() throws {
+        // v3 Mail Send populates `custom_args`, not `unique_args`
+        let json = """
+            {
+                "email": "customer@example.com",
+                "timestamp": 1513299569,
+                "event": "click",
+                "sg_event_id": "click-event-123",
+                "sg_message_id": "message-123",
+                "url": "https://shop.example.com/product/123",
+                "custom_args": {
+                    "user_id": "12345",
+                    "campaign_type": "abandoned_cart"
+                }
+            }
+            """
+
+        let webhookEvent = try JSONDecoder().decode(SendGridWebhookEvent.self, from: json.data(using: .utf8)!)
+
+        guard case .engagement(let event) = webhookEvent else {
+            Issue.record("Expected engagement event"); return
+        }
+        #expect(event.customArgs?["user_id"] == "12345")
+        #expect(event.customArgs?["campaign_type"] == "abandoned_cart")
+        #expect(event.uniqueArgs == nil)
+    }
+
+    @Test("Delivery event custom_args (v3 Mail Send)")
+    func deliveryEventCustomArgs() throws {
+        let json = """
+            {
+                "email": "test@example.com",
+                "timestamp": 1513299569,
+                "event": "delivered",
+                "sg_event_id": "evt-123",
+                "sg_message_id": "msg-123",
+                "custom_args": { "order_id": "ORD-999" }
+            }
+            """
+
+        let event = try JSONDecoder().decode(SendGridDeliveryEvent.self, from: json.data(using: .utf8)!)
+        #expect(event.customArgs?["order_id"] == "ORD-999")
+        #expect(event.uniqueArgs == nil)
+    }
+
+    @Test("Decode tls as integer 0/1 (wire format)")
+    func decodeTlsAsInteger() throws {
+        // SendGrid sends tls as 0 or 1 on the wire despite documenting it as Boolean
+        let jsonTlsOn = """
+            {
+                "email": "test@example.com",
+                "timestamp": 1513299569,
+                "event": "delivered",
+                "sg_event_id": "evt-1",
+                "sg_message_id": "msg-1",
+                "tls": 1
+            }
+            """
+        let jsonTlsOff = """
+            {
+                "email": "test@example.com",
+                "timestamp": 1513299569,
+                "event": "delivered",
+                "sg_event_id": "evt-2",
+                "sg_message_id": "msg-2",
+                "tls": 0
+            }
+            """
+
+        let eventOn = try JSONDecoder().decode(SendGridDeliveryEvent.self, from: jsonTlsOn.data(using: .utf8)!)
+        let eventOff = try JSONDecoder().decode(SendGridDeliveryEvent.self, from: jsonTlsOff.data(using: .utf8)!)
+
+        #expect(eventOn.tls == true)
+        #expect(eventOff.tls == false)
+    }
+
+    @Test("Decode tls as boolean (future-proof)")
+    func decodeTlsAsBoolean() throws {
+        let json = """
+            {
+                "email": "test@example.com",
+                "timestamp": 1513299569,
+                "event": "delivered",
+                "sg_event_id": "evt-3",
+                "sg_message_id": "msg-3",
+                "tls": true
+            }
+            """
+
+        let event = try JSONDecoder().decode(SendGridDeliveryEvent.self, from: json.data(using: .utf8)!)
+        #expect(event.tls == true)
     }
 
     @Test("Decode category as string - normalizes to array")
