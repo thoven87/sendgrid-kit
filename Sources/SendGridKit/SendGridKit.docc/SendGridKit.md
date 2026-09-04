@@ -35,6 +35,28 @@ Send simple emails or leverage the full capabilities of [SendGrid's V3 API](http
 - ``BulkEmailValidationJob``
 - ``BulkEmailValidationJobStatus``
 
+### Marketing Campaigns Contacts
+
+- ``SendGridContactClient``
+- ``Contact``
+- ``ContactCustomFieldValue``
+- ``ContactIdentifierType``
+- ``UpsertContactsRequest``
+- ``UpsertContactsResponse``
+- ``ContactsResponse``
+- ``ContactSearchRequest``
+- ``ContactSearchResponse``
+- ``ContactCount``
+- ``ContactJobResponse``
+- ``ContactMetadata``
+- ``ContactList``
+- ``ContactListsResponse``
+- ``CreateContactListRequest``
+- ``UpdateContactListRequest``
+- ``RemoveContactsFromListRequest``
+- ``ContactExportRequest``
+- ``ContactExportResponse``
+
 ### Webhooks
 
 - ``SendGridWebhookClient``
